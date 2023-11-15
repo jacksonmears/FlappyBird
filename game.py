@@ -16,30 +16,48 @@ class Bird (arcade.Sprite):
         self.veloJump = 0
         self.veloAngle = 0
         self.is_jumping = False
+        self.is_dead = False
 
 
 
     def update(self, symbol = None):
         # Gravity and Jump
-        self.veloJump += -0.5
-        self.center_y += self.veloJump
-        if self.veloJump < -7:
-            self.veloJump = -7
-        if symbol == arcade.key.SPACE and self.center_y > 0:
-            self.is_jumping = True
-            self.veloJump = 0
-            self.veloJump += 8.5
-            self.veloAngle = 0
-            self.veloAngle += 75
+        if not self.is_dead:
+            self.veloJump += -0.5
+            self.center_y += self.veloJump
+            if self.veloJump < -7:
+                self.veloJump = -7
+            if symbol == arcade.key.SPACE and self.center_y > 0:
+                self.is_jumping = True
+                self.veloJump = 0
+                self.veloJump += 8.5
+                self.veloAngle = 0
+                self.veloAngle += 75
 
-        if self.veloJump < 6:
-            self.veloAngle += -0.25
-            self.angle += self.veloAngle // 2
-        if self.angle < -90:
-            self.angle = -90
-        if self.angle > 45:
-            self.angle = 45
+            if self.veloJump < 6:
+                self.veloAngle += -0.25
+                self.angle += self.veloAngle // 2
+            if self.angle < -90:
+                self.angle = -90
+            if self.angle > 45:
+                self.angle = 45
+                self.veloAngle = 0
+        else:
             self.veloAngle = 0
+            if self.veloJump > 0:
+                self.veloJump = 0
+            if self.angle > -90:
+                self.veloAngle += -10
+                self.angle += self.veloAngle // 2
+            if self.angle <= -90:
+                self.angle = -90
+                self.veloAngle = 0
+
+            self.veloJump += -0.5
+            self.center_y += self.veloJump
+            if self.veloJump < -7:
+                self.veloJump = -7
+
 
 
 class Pipe(arcade.Sprite):
@@ -131,7 +149,7 @@ class Game(arcade.View):
 
         self.background = arcade.load_texture("BackGround.png")
         self.all_sprites_list = arcade.SpriteList()
-        self.bird = Bird("bird2.0.png", 0.175)
+        self.bird = Bird("bird2.0.png", 0.15)
         self.pipeTop = Pipe("topPipe.png", 1)
         self.pipeBot = Pipe("bottomPipe.png", 1)
         self.all_sprites_list.append(self.bird)
@@ -165,31 +183,36 @@ class Game(arcade.View):
     def update(self, delta_time):
         """All the logic to move, and the game logic goes here. """
 
-        self.frame_count += 1
+        if not self.bird.is_dead:
+            self.frame_count += 1
 
-        self.all_sprites_list.update()
-
-
-
-        if self.all_sprites_list[-3].center_x == self.bird.center_x and self.all_sprites_list[-3] != self.bird:
-            self.count += 1
-            print(self.count)
+            self.all_sprites_list.update()
 
 
-
-        if self.pipeTop.center_x == SCREEN_WIDTH//1.5:
-            self.pipeTop = Pipe("topPipe.png", 1)
-            self.pipeBot = Pipe("bottomPipe.png", 1)
-            self.all_sprites_list.append(self.pipeTop)
-            self.all_sprites_list.append(self.pipeBot)
+            if self.all_sprites_list[-3].center_x+46 == self.bird.center_x and self.all_sprites_list[-3] != self.bird:
+                self.count += 1
 
 
-        if self.bird.center_y > SCREEN_HEIGHT or self.bird.center_y < 0 or self.bird.collides_with_list(self.all_sprites_list):
-            if self.count > HIGH_SCORES[-1]:
-                HIGH_SCORES.append(self.count)
-                HIGH_SCORES.pop(0)
-            gameOverView = gameOver()
-            self.window.show_view(gameOverView)
+
+            if self.pipeTop.center_x == SCREEN_WIDTH//1.5:
+                self.pipeTop = Pipe("topPipe.png", 1)
+                self.pipeBot = Pipe("bottomPipe.png", 1)
+                self.all_sprites_list.append(self.pipeTop)
+                self.all_sprites_list.append(self.pipeBot)
+
+
+            if self.bird.collides_with_list(self.all_sprites_list) or self.bird.center_y >= SCREEN_HEIGHT:
+                self.bird.is_dead = True
+
+
+        else:
+            self.bird.update()
+            if self.bird.center_y < 0:
+                if self.count > HIGH_SCORES[-1]:
+                    HIGH_SCORES.append(self.count)
+                    HIGH_SCORES.pop(0)
+                gameOverView = gameOver()
+                self.window.show_view(gameOverView)
 
 
 class gameOver(arcade.View):
