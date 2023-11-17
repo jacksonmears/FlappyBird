@@ -55,8 +55,8 @@ class Bird (arcade.Sprite):
 
             self.veloJump += -0.5
             self.center_y += self.veloJump
-            if self.veloJump < -7:
-                self.veloJump = -7
+            if self.veloJump < -10:
+                self.veloJump = -10
 
 
 
@@ -68,7 +68,7 @@ class Pipe(arcade.Sprite):
 
 
         if image == "topPipe.png":
-            randNumPipe = random.randint(SCREEN_HEIGHT // 2 - 150, SCREEN_HEIGHT // 2 + 150)
+            randNumPipe = random.randint(SCREEN_HEIGHT // 2 - 75, SCREEN_HEIGHT // 2 + 150)
             pipeGapList.append(randNumPipe)
             self.bottom = randNumPipe + 75
 
@@ -79,23 +79,35 @@ class Pipe(arcade.Sprite):
 
 
     def update(self):
-        self.center_x -= 1
+        self.center_x -= 2
         if self.center_x < -50:
             self.remove_from_sprite_lists()
         super(Pipe, self).update()
 
+
+class Ground(arcade.Sprite):
+    def __init__(self, image, scale, centerX):
+        super().__init__(image, scale)
+        self.center_x = centerX
+        self.center_y = 50
+
+    def update(self):
+        self.center_x -= 2
+        super(Ground, self).update()
 
 class StartingScreen(arcade.View):
 
     def __init__(self):
         super().__init__()
         self.background = arcade.load_texture('BackGround.png')
+        self.flappyWords = arcade.load_texture('newStartingScreen.png')
 
 
     def on_draw(self):
         self.clear()
         arcade.start_render()
         arcade.draw_lrwh_rectangle_textured(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, self.background)
+        arcade.draw_lrwh_rectangle_textured(SCREEN_WIDTH//2-125, SCREEN_HEIGHT//2+50, 257, 250, self.flappyWords)
         arcade.draw_text("Press Spacebar ", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
                          arcade.color.WHITE, font_size=30, anchor_x="center")
         arcade.draw_text("to jump ", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 200,
@@ -124,10 +136,12 @@ class Game(arcade.View):
         self.pipeTop = None
         self.pipeBot = None
         self.pipeWidth = 0
+        self.centerX = 0
         self.pipeHeight = 0
         self.randPipeList = []
         self.count = 0
         self.gameOver = False
+        self.ground = None
         # self.y_top = 0
         # self.x_top = 0
         # self.y_bottom = 0
@@ -137,6 +151,7 @@ class Game(arcade.View):
         self.frame_count = 0
         self.birdSpriteList = arcade.SpriteList()
         self.pipeSpriteList = arcade.SpriteList()
+        self.groundSpriteList = arcade.SpriteList()
         self.all_sprites_list = arcade.SpriteList()
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -152,10 +167,15 @@ class Game(arcade.View):
         self.bird = Bird("bird2.0.png", 0.15)
         self.pipeTop = Pipe("topPipe.png", 1)
         self.pipeBot = Pipe("bottomPipe.png", 1)
+        self.ground = Ground("NewGround.png", 1, SCREEN_WIDTH//2)
+        self.birdSpriteList.append(self.bird)
         self.all_sprites_list.append(self.bird)
+        self.pipeSpriteList.append(self.pipeTop)
+        self.pipeSpriteList.append(self.pipeBot)
         self.all_sprites_list.append(self.pipeTop)
         self.all_sprites_list.append(self.pipeBot)
-
+        self.groundSpriteList.append(self.ground)
+        self.all_sprites_list.append(self.ground)
 
 
 
@@ -171,7 +191,9 @@ class Game(arcade.View):
         # Draw the background texture
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2,
                                       SCREEN_WIDTH, SCREEN_HEIGHT, self.background)
-        self.all_sprites_list.draw()
+        self.pipeSpriteList.draw()
+        self.groundSpriteList.draw()
+        self.birdSpriteList.draw()
 
         arcade.draw_text(self.count, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100,
                          arcade.color.WHITE, font_name = 'Kenny Blocks Font', bold = True,font_size=40, anchor_x="center")
@@ -189,25 +211,30 @@ class Game(arcade.View):
             self.all_sprites_list.update()
 
 
-            if self.all_sprites_list[-3].center_x+46 == self.bird.center_x and self.all_sprites_list[-3] != self.bird:
+            if self.pipeSpriteList[1].center_x+46 == self.bird.center_x:
                 self.count += 1
 
-
+            if self.groundSpriteList[-1].center_x < 0:
+                self.ground = Ground("NewGround.png", 1, self.ground.right + (self.ground.width//2)-10)
+                self.groundSpriteList.append(self.ground)
+                self.all_sprites_list.append(self.ground)
 
             if self.pipeTop.center_x == SCREEN_WIDTH//1.5:
                 self.pipeTop = Pipe("topPipe.png", 1)
                 self.pipeBot = Pipe("bottomPipe.png", 1)
+                self.pipeSpriteList.append(self.pipeTop)
+                self.pipeSpriteList.append(self.pipeBot)
                 self.all_sprites_list.append(self.pipeTop)
                 self.all_sprites_list.append(self.pipeBot)
 
 
-            if self.bird.collides_with_list(self.all_sprites_list) or self.bird.center_y >= SCREEN_HEIGHT:
+            if self.bird.collides_with_list(self.all_sprites_list) or self.bird.center_y >= SCREEN_HEIGHT or self.bird.center_y <= self.ground.top:
                 self.bird.is_dead = True
 
 
         else:
             self.bird.update()
-            if self.bird.center_y < 0:
+            if self.bird.center_y <= self.ground.top:
                 if self.count > HIGH_SCORES[-1]:
                     HIGH_SCORES.append(self.count)
                     HIGH_SCORES.pop(0)
@@ -223,9 +250,13 @@ class gameOver(arcade.View):
         arcade.draw_text("Game Over", 80, 150, arcade.color.WHITE, 20)
         arcade.draw_text(HIGH_SCORES[0], SCREEN_WIDTH / 2, 100,
                          arcade.color.WHITE, font_name='Kenny Blocks Font', bold=True, font_size=30, anchor_x="center")
-        HighScoreFile = open("HighScore", "w")
-        HighScoreFile.write(str(HIGH_SCORES[0]))
-        HighScoreFile.close()
+        HSFileRead = open("HighScore", "r")
+        totalHS = int(HSFileRead.read())
+        HSFileRead.close()
+        if HIGH_SCORES[0] > totalHS:
+            HSFileWrite = open("HighScore", "w")
+            HSFileWrite.write(str(HIGH_SCORES[0]))
+            HSFileWrite.close()
 
     def on_key_release(self, symbol: int, modifiers: int):
         game_view = StartingScreen()
