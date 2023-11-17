@@ -5,13 +5,14 @@ SCREEN_WIDTH = 360
 SCREEN_HEIGHT = 640
 pipeGapList = []
 HIGH_SCORES = [0]
+SCROLL_SPEED = 2
 
 class Bird (arcade.Sprite):
 
     def __init__(self, image, scale):
         super().__init__(image, scale)
         self.center_x = 100
-        self.center_y = 500
+        self.center_y = 450
         self.angle = 0
         self.veloJump = 0
         self.veloAngle = 0
@@ -59,12 +60,12 @@ class Bird (arcade.Sprite):
                 self.veloJump = -10
 
 
-
 class Pipe(arcade.Sprite):
 
     def __init__(self, image, scale):
         super().__init__(image, scale)
         self.center_x = SCREEN_WIDTH+100
+        self.moveSpeed = SCROLL_SPEED
 
 
         if image == "topPipe.png":
@@ -79,7 +80,7 @@ class Pipe(arcade.Sprite):
 
 
     def update(self):
-        self.center_x -= 2
+        self.center_x -= self.moveSpeed
         if self.center_x < -50:
             self.remove_from_sprite_lists()
         super(Pipe, self).update()
@@ -90,10 +91,12 @@ class Ground(arcade.Sprite):
         super().__init__(image, scale)
         self.center_x = centerX
         self.center_y = 50
+        self.moveSpeed = SCROLL_SPEED
 
     def update(self):
-        self.center_x -= 2
+        self.center_x -= self.moveSpeed
         super(Ground, self).update()
+
 
 class StartingScreen(arcade.View):
 
@@ -101,12 +104,14 @@ class StartingScreen(arcade.View):
         super().__init__()
         self.background = arcade.load_texture('BackGround.png')
         self.flappyWords = arcade.load_texture('newStartingScreen.png')
+        self.startingFlappyImage = arcade.load_texture('bird2.0.png')
 
 
     def on_draw(self):
         self.clear()
         arcade.start_render()
         arcade.draw_lrwh_rectangle_textured(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, self.background)
+        arcade.draw_lrwh_rectangle_textured(100-20, 425, 296*0.15, 264*0.15, self.startingFlappyImage)
         arcade.draw_lrwh_rectangle_textured(SCREEN_WIDTH//2-125, SCREEN_HEIGHT//2+50, 257, 250, self.flappyWords)
         arcade.draw_text("Press Spacebar ", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 150,
                          arcade.color.WHITE, font_size=30, anchor_x="center")
@@ -142,6 +147,8 @@ class Game(arcade.View):
         self.count = 0
         self.gameOver = False
         self.ground = None
+        self.pastPipes = []
+        self.checkPoint = []
         # self.y_top = 0
         # self.x_top = 0
         # self.y_bottom = 0
@@ -206,26 +213,41 @@ class Game(arcade.View):
         """All the logic to move, and the game logic goes here. """
 
         if not self.bird.is_dead:
-            self.frame_count += 1
 
             self.all_sprites_list.update()
 
+            if self.count % 2 == 0 and self.count != 0 and self.count not in self.checkPoint:
+                self.checkPoint.append(self.count)
+                global SCROLL_SPEED
+                SCROLL_SPEED += 0.05
+                print(SCROLL_SPEED)
 
-            if self.pipeSpriteList[1].center_x+46 == self.bird.center_x:
-                self.count += 1
+
+
+            if self.pipeSpriteList[1].right < self.bird.left:
+                if self.pipeSpriteList[1] not in self.pastPipes:
+                    self.pastPipes.append(self.pipeSpriteList[1])
+                    self.count += 1
+                    if len(self.pastPipes) > 1:
+                        self.pastPipes.pop(0)
+
+
+
+
 
             if self.groundSpriteList[-1].center_x < 0:
                 self.ground = Ground("NewGround.png", 1, self.ground.right + (self.ground.width//2)-10)
                 self.groundSpriteList.append(self.ground)
                 self.all_sprites_list.append(self.ground)
 
-            if self.pipeTop.center_x == SCREEN_WIDTH//1.5:
+            if self.pipeTop.center_x < SCREEN_WIDTH//1.5:
                 self.pipeTop = Pipe("topPipe.png", 1)
                 self.pipeBot = Pipe("bottomPipe.png", 1)
                 self.pipeSpriteList.append(self.pipeTop)
                 self.pipeSpriteList.append(self.pipeBot)
                 self.all_sprites_list.append(self.pipeTop)
                 self.all_sprites_list.append(self.pipeBot)
+
 
 
             if self.bird.collides_with_list(self.all_sprites_list) or self.bird.center_y >= SCREEN_HEIGHT or self.bird.center_y <= self.ground.top:
@@ -240,6 +262,7 @@ class Game(arcade.View):
                     HIGH_SCORES.pop(0)
                 gameOverView = gameOver()
                 self.window.show_view(gameOverView)
+                SCROLL_SPEED = 2
 
 
 class gameOver(arcade.View):
@@ -247,9 +270,9 @@ class gameOver(arcade.View):
         super().__init__()
 
     def on_draw(self):
-        arcade.draw_text("Game Over", 80, 150, arcade.color.WHITE, 20)
-        arcade.draw_text(HIGH_SCORES[0], SCREEN_WIDTH / 2, 100,
-                         arcade.color.WHITE, font_name='Kenny Blocks Font', bold=True, font_size=30, anchor_x="center")
+        arcade.draw_text("High Score", SCREEN_WIDTH//2, 175, arcade.color.GOLD , font_name='Kenny Blocks Font', bold = True, font_size=30, anchor_x="center")
+        arcade.draw_text(HIGH_SCORES[0], SCREEN_WIDTH//2, 125,
+                         arcade.color.GOLD, font_name='Kenny Blocks Font', bold=True, font_size=35, anchor_x="center")
         HSFileRead = open("HighScore", "r")
         totalHS = int(HSFileRead.read())
         HSFileRead.close()
@@ -263,13 +286,13 @@ class gameOver(arcade.View):
         self.window.show_view(game_view)
 
 
+
 def main():
     """ Main method """
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, "Flappy Bird")
     startingView = StartingScreen()
     window.show_view(startingView)
     arcade.run()
-
 
 
 main()
