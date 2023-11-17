@@ -220,7 +220,6 @@ class Game(arcade.View):
                 self.checkPoint.append(self.count)
                 global SCROLL_SPEED
                 SCROLL_SPEED += 0.05
-                print(SCROLL_SPEED)
 
 
 
@@ -273,6 +272,7 @@ class gameOver(arcade.View):
         arcade.draw_text("High Score", SCREEN_WIDTH//2, 175, arcade.color.GOLD , font_name='Kenny Blocks Font', bold = True, font_size=30, anchor_x="center")
         arcade.draw_text(HIGH_SCORES[0], SCREEN_WIDTH//2, 125,
                          arcade.color.GOLD, font_name='Kenny Blocks Font', bold=True, font_size=35, anchor_x="center")
+        arcade.draw_lrwh_rectangle_textured(SCREEN_WIDTH//2 - 296//2, SCREEN_HEIGHT//2, 296, 264, arcade.load_texture("gameOver.png"))
         HSFileRead = open("HighScore", "r")
         totalHS = int(HSFileRead.read())
         HSFileRead.close()
