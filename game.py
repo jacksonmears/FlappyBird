@@ -6,6 +6,7 @@ SCREEN_HEIGHT = 640
 pipeGapList = []
 HIGH_SCORES = [0]
 SCROLL_SPEED = 2
+HEIGHT_DIFF = 75
 
 class Bird (arcade.Sprite):
 
@@ -18,6 +19,7 @@ class Bird (arcade.Sprite):
         self.veloAngle = 0
         self.is_jumping = False
         self.is_dead = False
+        self.is_grounded = False
 
 
 
@@ -44,20 +46,24 @@ class Bird (arcade.Sprite):
                 self.angle = 45
                 self.veloAngle = 0
         else:
-            self.veloAngle = 0
-            if self.veloJump > 0:
-                self.veloJump = 0
-            if self.angle > -90:
-                self.veloAngle += -10
-                self.angle += self.veloAngle // 2
-            if self.angle <= -90:
-                self.angle = -90
+            if self.is_grounded:
                 self.veloAngle = 0
+                self.veloJump = 0
+            else:
+                self.veloAngle = 0
+                if self.veloJump > 0:
+                    self.veloJump = 0
+                if self.angle > -90:
+                    self.veloAngle += -10
+                    self.angle += self.veloAngle // 2
+                if self.angle <= -90:
+                    self.angle = -90
+                    self.veloAngle = 0
 
-            self.veloJump += -0.5
-            self.center_y += self.veloJump
-            if self.veloJump < -10:
-                self.veloJump = -10
+                self.veloJump += -0.5
+                self.center_y += self.veloJump
+                if self.veloJump < -10:
+                    self.veloJump = -10
 
 
 class Pipe(arcade.Sprite):
@@ -66,15 +72,17 @@ class Pipe(arcade.Sprite):
         super().__init__(image, scale)
         self.center_x = SCREEN_WIDTH+100
         self.moveSpeed = SCROLL_SPEED
+        self.topHeight = SCREEN_HEIGHT // 2 + 150
+        self.bottomHeight = SCREEN_HEIGHT // 2 - 75
 
 
         if image == "topPipe.png":
-            randNumPipe = random.randint(SCREEN_HEIGHT // 2 - 75, SCREEN_HEIGHT // 2 + 150)
+            randNumPipe = random.randint(self.bottomHeight, self.topHeight)
             pipeGapList.append(randNumPipe)
             self.bottom = randNumPipe + 75
 
         else:
-            self.top = pipeGapList[-1] - 75
+            self.top = pipeGapList[-1] - HEIGHT_DIFF
             pipeGapList.pop(0)
 
 
@@ -148,7 +156,8 @@ class Game(arcade.View):
         self.gameOver = False
         self.ground = None
         self.pastPipes = []
-        self.checkPoint = []
+        self.checkPointSpeed = []
+        self.checkPointSize = []
         # self.y_top = 0
         # self.x_top = 0
         # self.y_bottom = 0
@@ -216,10 +225,18 @@ class Game(arcade.View):
 
             self.all_sprites_list.update()
 
-            if self.count % 2 == 0 and self.count != 0 and self.count not in self.checkPoint:
-                self.checkPoint.append(self.count)
+            if self.count % 2 == 0 and self.count != 0 and self.count not in self.checkPointSpeed:
+                self.checkPointSpeed.append(self.count)
                 global SCROLL_SPEED
                 SCROLL_SPEED += 0.05
+
+
+            # Makes difference between pipes smaller and smaller every 5 pipes. Works just fine but sets a cap on how far the player can reach unless you place a cap on how small the difference can be. Not sure if I want to keep it.
+            # if self.count+1 % 5 == 0 and self.count+1 != 0 and self.count+1 not in self.checkPointSize:
+            #     self.checkPointSize.append(self.count+1)
+            #     print(self.checkPointSize)
+            #     global HEIGHT_DIFF
+            #     HEIGHT_DIFF -= 5
 
 
 
@@ -254,7 +271,6 @@ class Game(arcade.View):
 
 
         else:
-            self.bird.update()
             if self.bird.center_y <= self.ground.top:
                 if self.count > HIGH_SCORES[-1]:
                     HIGH_SCORES.append(self.count)
@@ -262,6 +278,9 @@ class Game(arcade.View):
                 gameOverView = gameOver()
                 self.window.show_view(gameOverView)
                 SCROLL_SPEED = 2
+                HEIGHT_DIFF = 75
+            else:
+                self.bird.update()
 
 
 class gameOver(arcade.View):
