@@ -94,7 +94,7 @@ class Pipe(arcade.Sprite):
         self.xRemovePipe = -50
 
         # if the pipe is the top one then set the bottom of the top. if the pipe is the bottom then we need to set the top of the bottom.
-        if image == "topPipe.png":
+        if image == "images/topPipe.png":
             randNumPipe = random.randint(self.bottomHeight, self.topHeight)
             pipeGapList.append(randNumPipe)
             self.bottom = randNumPipe + self.offRandomTop
@@ -133,9 +133,9 @@ class StartingScreen(arcade.View):
     # initializing image variables
     def __init__(self):
         super().__init__()
-        self.background = arcade.load_texture('BackGround.png')
-        self.flappyWords = arcade.load_texture('newStartingScreen.png')
-        self.startingFlappyImage = arcade.load_texture('bird2.0.png')
+        self.background = arcade.load_texture('images/BackGround.png')
+        self.flappyWords = arcade.load_texture('images/newStartingScreen.png')
+        self.startingFlappyImage = arcade.load_texture('images/bird2.0.png')
 
     # function used to bring the images to the screen (most numbers used are non-mathematical just eyeballed to my liking)
     def on_draw(self):
@@ -195,12 +195,12 @@ class Game(arcade.View):
 
     # setting up the variables/objects for every image/sprite prior to the game starting/updating
     def setup(self):
-        self.background = arcade.load_texture("BackGround.png")
+        self.background = arcade.load_texture("images/BackGround.png")
         self.all_sprites_list = arcade.SpriteList()
-        self.bird = Bird("bird2.0.png", 0.15)
-        self.pipeTop = Pipe("topPipe.png", 1)
-        self.pipeBot = Pipe("bottomPipe.png", 1)
-        self.ground = Ground("NewGround.png", 1, SCREEN_WIDTH//2)
+        self.bird = Bird("images/bird2.0.png", 0.15)
+        self.pipeTop = Pipe("images/topPipe.png", 1)
+        self.pipeBot = Pipe("images/bottomPipe.png", 1)
+        self.ground = Ground("images/NewGround.png", 1, SCREEN_WIDTH//2)
         self.birdSpriteList.append(self.bird)
         self.all_sprites_list.append(self.bird)
         self.pipeSpriteList.append(self.pipeTop)
@@ -258,14 +258,14 @@ class Game(arcade.View):
 
             # creating more ground sprites every so often to make it appear as if ground is infinite
             if self.groundSpriteList[-1].center_x < 0:
-                self.ground = Ground("NewGround.png", 1, self.ground.right + (self.ground.width//2)-10)
+                self.ground = Ground("images/NewGround.png", 1, self.ground.right + (self.ground.width//2)-10)
                 self.groundSpriteList.append(self.ground)
                 self.all_sprites_list.append(self.ground)
 
             # same concept as teh ground sprites (need to create more to make it appear as if the pipes are never ending too)
             if self.pipeTop.center_x < SCREEN_WIDTH//1.5:
-                self.pipeTop = Pipe("topPipe.png", 1)
-                self.pipeBot = Pipe("bottomPipe.png", 1)
+                self.pipeTop = Pipe("images/topPipe.png", 1)
+                self.pipeBot = Pipe("images/bottomPipe.png", 1)
                 self.pipeSpriteList.append(self.pipeTop)
                 self.pipeSpriteList.append(self.pipeBot)
                 self.all_sprites_list.append(self.pipeTop)
@@ -304,7 +304,8 @@ class gameOver(arcade.View):
         arcade.draw_text("High Score", SCREEN_WIDTH//2, 175, arcade.color.GOLD , font_name='Kenny Blocks Font', bold = True, font_size=30, anchor_x="center")
         arcade.draw_text(HIGH_SCORES[0], SCREEN_WIDTH//2, 125,
                          arcade.color.GOLD, font_name='Kenny Blocks Font', bold=True, font_size=35, anchor_x="center")
-        arcade.draw_lrwh_rectangle_textured(SCREEN_WIDTH//2 - 296//2, SCREEN_HEIGHT//2, 296, 264, arcade.load_texture("gameOver.png"))
+        arcade.draw_lrwh_rectangle_textured(SCREEN_WIDTH // 2 - 296 // 2, SCREEN_HEIGHT // 2, 296, 264, arcade.load_texture(
+            "images/gameOver.png"))
         # creating a high score text file to save the players all-time high score (even across program plays)
         pathHighScore = pathlib.Path("HighScore")
         # testing if the high score text file already exists (if not creating the text file)
