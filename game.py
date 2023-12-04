@@ -248,10 +248,12 @@ class Game(arcade.View):
 
             # testing location of pipe and if the bird has passed the right side of the pipe the counter will increase
             if self.pipeSpriteList[1].right < self.bird.left:
+
                 # creating a list of pipes the bird has passed to prevent double counting (updates make counting hard)
                 if self.pipeSpriteList[1] not in self.pastPipes:
                     self.pastPipes.append(self.pipeSpriteList[1])
                     self.count += 1
+
                     # once the bird passes a second pipe the first will be removed from list (saving memory)
                     if len(self.pastPipes) > 1:
                         self.pastPipes.pop(0)
@@ -277,14 +279,15 @@ class Game(arcade.View):
 
         # once the bird is dead the updating will be moved to here
         else:
+
             # testing if the bird has reached the ground yet (the bird will fall once it dies until it reaches the ground)
             if self.bird.center_y <= self.ground.top:
-                #test if the counter is higher than a previously recorded High Score if not the the high score will be updated
                 if self.count > HIGH_SCORES[-1]:
                     HIGH_SCORES.append(self.count)
                     HIGH_SCORES.pop(0)
                 gameOverView = gameOver()
                 self.window.show_view(gameOverView)
+
                 # reset default scroll speed
                 SCROLL_SPEED = 2
                 # HEIGHT_DIFF only used if you use the pipe height change updates (is not being used as of right now)
@@ -306,13 +309,16 @@ class gameOver(arcade.View):
                          arcade.color.GOLD, font_name='Kenny Blocks Font', bold=True, font_size=35, anchor_x="center")
         arcade.draw_lrwh_rectangle_textured(SCREEN_WIDTH // 2 - 296 // 2, SCREEN_HEIGHT // 2, 296, 264, arcade.load_texture(
             "images/gameOver.png"))
+
         # creating a high score text file to save the players all-time high score (even across program plays)
         pathHighScore = pathlib.Path("HighScore")
+
         # testing if the high score text file already exists (if not creating the text file)
         if not pathlib.Path("HighScore").is_file():
             HSFileCreate = open("HighScore", "w")
             HSFileCreate.write('0')
             HSFileCreate.close()
+
         # reading and updating high score text file if necessary
         HSFileRead = open("HighScore", "r")
         totalHS = int(HSFileRead.read())
